@@ -1,0 +1,788 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with profile information
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  image             String?
+  coverImage        String?
+  bio               String?
+  username          String?   @unique
+  joinedAt          DateTime  @default(now())
+  lastActive        DateTime  @default(now())
+  
+  // Authentication
+  accounts          Account[]
+  sessions          Session[]
+  
+  // Social features
+  posts             Post[]
+  comments          Comment[]
+  reactions         Reaction[]
+  followers         Follows[]   @relation("following")
+  following         Follows[]   @relation("follower")
+  messages          Message[]   @relation("sender")
+  receivedMessages  Message[]   @relation("receiver")
+  notifications     Notification[] @relation("userNotifications")
+  savedPosts        SavedPost[]
+  interests         UserInterest[]
+  
+  // Reels 
+  reels             Reel[]
+  reelLikes         ReelLike[]
+  reelComments      ReelComment[]
+  savedReels        SavedReel[]
+  reelViews         ReelView[]
+
+  // Stories
+  stories           Story[]
+  storyViews        StoryView[]
+  storyReactions    StoryReaction[]
+  storyHighlights   StoryHighlight[]
+  storyResponses    StoryResponse[]
+  
+  // Audio messages
+  audioMessages     AudioMessage[]
+  
+  // Activity tracking
+  postViews         PostView[]
+  
+  // Settings and preferences
+  settings          UserSettings?
+}
+
+// NextAuth models for authentication
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// User settings model for preferences
+model UserSettings {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Theme preferences
+  theme       String  @default("light") // light, dark, dusk, system
+  primaryColor String? // HEX color code
+  secondaryColor String? // HEX color code
+  fontPreference String? // font family name
+  animationsEnabled Boolean @default(true)
+  
+  language    String  @default("en")
+  
+  // Privacy settings
+  privacyLevel PrivacyLevel @default(PUBLIC)
+  
+  // Notification preferences
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+  messageNotifications Boolean @default(true)
+  
+  // AI preferences
+  aiEnabled    Boolean @default(true)
+  aiTokensRemaining Int @default(150)
+  aiTokensReset DateTime? // When the free daily tokens reset
+  aiPlan       AIPlan @default(FREE)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Topics/interests
+model Topic {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  
+  // Relations
+  posts       PostTopic[]
+  interests   UserInterest[]
+  stories     StoryTopic[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserInterest {
+  userId      String
+  topicId     String
+  
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic       Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@id([userId, topicId])
+}
+
+// Post model
+model Post {
+  id          String  @id @default(cuid())
+  content     String? @db.Text
+  
+  // Media support for images, videos, etc.
+  mediaUrls   String[]
+  mediaTitles String[]
+  mediaTypes  String[]
+  
+  // AI Analysis results
+  sentiment   Float?         // -1 to 1 scale
+  aiAnalysis  Json?
+  
+  // Meta
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Visibility level
+  privacyLevel PrivacyLevel @default(PUBLIC)
+  
+  // Social features
+  comments    Comment[]
+  reactions   Reaction[]
+  savedBy     SavedPost[]
+  topics      PostTopic[]
+  views       PostView[]
+  audioMessages AudioMessage[]
+  
+  // Parent-child relationship for shared/reposted content
+  parentId    String?
+  parent      Post?     @relation("PostToPost", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Post[]    @relation("PostToPost")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Comment model
+model Comment {
+  id          String  @id @default(cuid())
+  content     String?
+  
+  // Parent post
+  postId      String
+  post        Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  // Author
+  authorId    String
+  author      User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Parent comment for replies
+  parentId    String?
+  parent      Comment? @relation("CommentToComment", fields: [parentId], references: [id], onDelete: SetNull)
+  replies     Comment[] @relation("CommentToComment")
+  
+  // Reactions
+  reactions   Reaction[]
+  
+  // Audio message (if this is an audio comment)
+  audioMessage AudioMessage?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Reaction model (likes, loves, etc.)
+model Reaction {
+  id          String      @id @default(cuid())
+  type        ReactionType
+  
+  // User who reacted
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Can be a reaction to a post or comment
+  postId      String?
+  post        Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  commentId   String?
+  comment     Comment?    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  @@unique([userId, postId, commentId])
+}
+
+// SavedPost model for bookmarking posts
+model SavedPost {
+  id          String   @id @default(cuid())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([userId, postId])
+}
+
+// PostTopic model for tagging posts with topics
+model PostTopic {
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  topicId     String
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@id([postId, topicId])
+}
+
+// Follows/connections between users
+model Follows {
+  followerId  String
+  follower    User    @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  
+  followingId String
+  following   User    @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  // Friend status (mutual follows are friends)
+  status      FollowStatus @default(PENDING)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@id([followerId, followingId])
+}
+
+// Messages between users
+model Message {
+  id          String  @id @default(cuid())
+  content     String?  @db.Text
+  
+  // Media support
+  mediaUrl    String?
+  mediaType   String?
+  
+  // Sender and receiver
+  senderId    String
+  sender      User    @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId  String
+  receiver    User    @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  // Audio message (if this is an audio message)
+  audioMessage AudioMessage?
+  
+  // Read status
+  read        Boolean @default(false)
+  readAt      DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Notifications system
+model Notification {
+  id          String            @id @default(cuid())
+  
+  userId      String
+  user        User              @relation("userNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        NotificationType
+  title       String
+  content     String
+  
+  // Optional link to related content
+  link        String?
+  
+  read        Boolean          @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Post view tracking
+model PostView {
+  id          String    @id @default(cuid())
+  
+  postId      String
+  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([postId, userId])
+}
+
+// Reels (TikTok/Instagram style vertical videos)
+model Reel {
+  id            String    @id @default(cuid())
+  videoUrl      String
+  thumbnailUrl  String
+  description   String?   @db.Text
+  
+  // Video metadata
+  duration      Float     // In seconds
+  aspectRatio   Float     @default(0.5625) // 9:16 = 0.5625
+  audio         Json?     // Artist, title, etc.
+  
+  // Author and privacy
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  privacyLevel  PrivacyLevel @default(PUBLIC)
+  
+  // Tags and topics
+  tags          String[]
+  
+  // Engagement metrics
+  likes         ReelLike[]
+  comments      ReelComment[]
+  savedBy       SavedReel[]
+  views         ReelView[]
+  audioMessages AudioMessage[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Reel likes
+model ReelLike {
+  id          String    @id @default(cuid())
+  
+  reelId      String
+  reel        Reel      @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([reelId, userId])
+}
+
+// Reel comments
+model ReelComment {
+  id          String    @id @default(cuid())
+  content     String?
+  
+  reelId      String
+  reel        Reel      @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Audio message (if this is an audio comment)
+  audioMessage AudioMessage?
+  
+  // Parent comment for replies
+  parentId    String?
+  parent      ReelComment? @relation("ReelCommentToReelComment", fields: [parentId], references: [id], onDelete: SetNull)
+  replies     ReelComment[] @relation("ReelCommentToReelComment")
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Saved reels
+model SavedReel {
+  id          String    @id @default(cuid())
+  
+  reelId      String
+  reel        Reel      @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([reelId, userId])
+}
+
+// Reel view tracking
+model ReelView {
+  id          String    @id @default(cuid())
+  
+  reelId      String
+  reel        Reel      @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // View metrics
+  watchDuration Float    // In seconds
+  watchPercentage Float  // 0-100%
+  completedView Boolean  @default(false) // True if watched to the end
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([reelId, userId])
+}
+
+// Stories System - Instagram/Facebook-like 24-hour content
+model Story {
+  id              String      @id @default(cuid())
+  
+  // Media content
+  mediaUrl        String      // URL to the image, video, or text background
+  thumbnailUrl    String?     // Thumbnail for preview
+  mediaType       MediaType   // IMAGE, VIDEO, or TEXT
+  duration        Float?      // For videos or display duration for text/images
+  
+  // Story creation details
+  authorId        String
+  author          User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  caption         String?     @db.Text
+  location        String?
+  
+  // Creative tools elements
+  backgroundColor String?     // For text stories or color backgrounds
+  textOverlays    Json?       // Array of text elements with positioning and styling
+  drawElements    Json?       // Array of drawing elements with paths and colors
+  stickers        Json?       // Array of stickers with positioning
+  filter          String?     // Applied filter name/id
+  
+  // Music
+  musicTrackUrl   String?
+  musicArtist     String?
+  musicTitle      String?
+  
+  // Interactive elements
+  allowResponses  Boolean     @default(true)
+  
+  // Visibility and status
+  privacyLevel    PrivacyLevel @default(PUBLIC)
+  isArchived      Boolean      @default(false)
+  expiresAt       DateTime     // 24 hours from creation
+  
+  // Engagement
+  views           StoryView[]
+  reactions       StoryReaction[]
+  responses       StoryResponse[]
+  topics          StoryTopic[]
+  highlights      StoryHighlightItem[]
+  audioMessages   AudioMessage[]
+  
+  // Links
+  links           StoryLink[]
+  
+  // Interactive elements
+  polls           StoryPoll[]
+  questions       StoryQuestion[]
+  sliders         StorySlider[]
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model StoryView {
+  id          String    @id @default(cuid())
+  
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // View duration for analytics
+  viewDuration Float?
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([storyId, userId])
+}
+
+model StoryReaction {
+  id          String    @id @default(cuid())
+  
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  emoji       String    // Unicode emoji or reference to custom emoji
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([storyId, userId])
+}
+
+model StoryResponse {
+  id          String    @id @default(cuid())
+  
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  content     String?   @db.Text
+  
+  // Audio message (if this is an audio response)
+  audioMessage AudioMessage?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model StoryTopic {
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  topicId     String
+  topic       Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now())
+  
+  @@id([storyId, topicId])
+}
+
+model StoryHighlight {
+  id          String    @id @default(cuid())
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name        String
+  coverImageUrl String?
+  
+  items       StoryHighlightItem[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model StoryHighlightItem {
+  id          String    @id @default(cuid())
+  
+  highlightId String
+  highlight   StoryHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+  
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  order       Int       @default(0) // For ordering in highlight
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([highlightId, storyId])
+}
+
+// Interactive story elements
+model StoryPoll {
+  id          String    @id @default(cuid())
+  
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  question    String
+  options     Json      // Array of {id, text}
+  votes       Json?     // Map of optionId => [userIds]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model StoryQuestion {
+  id          String    @id @default(cuid())
+  
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  question    String
+  answers     Json?     // Array of {userId, answer}
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model StorySlider {
+  id          String    @id @default(cuid())
+  
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  question    String
+  emoji       String?   // Optional emoji for the slider
+  responses   Json?     // Array of {userId, value}
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model StoryLink {
+  id          String    @id @default(cuid())
+  
+  storyId     String
+  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  url         String
+  label       String?
+  position    Json?     // {x, y} coordinates for positioning
+  
+  createdAt   DateTime  @default(now())
+}
+
+// Audio messages system
+model AudioMessage {
+  id            String    @id @default(cuid())
+  url           String    // URL to the audio file
+  duration      Float     // Duration in seconds
+  waveform      Json      // Audio visualization data
+  transcription String?   @db.Text // AI-generated transcription
+  
+  // Processing status
+  processingStatus AudioProcessingStatus @default(PENDING)
+  
+  // Relations - can be attached to different entities
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Comment relation (optional)
+  commentId     String?   @unique
+  comment       Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  // Reel comment relation (optional)
+  reelCommentId String?   @unique
+  reelComment   ReelComment? @relation(fields: [reelCommentId], references: [id], onDelete: Cascade)
+  
+  // Message relation (optional)
+  messageId     String?   @unique
+  message       Message?  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  // Story response relation (optional)
+  storyResponseId String? @unique
+  storyResponse   StoryResponse? @relation(fields: [storyResponseId], references: [id], onDelete: Cascade)
+  
+  // Direct post audio comment (optional)
+  postId        String?
+  post          Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  // Direct reel audio comment (optional)
+  reelId        String?
+  reel          Reel?    @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  
+  // Direct story audio comment (optional)
+  storyId       String?
+  story         Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  // Analysis fields
+  sentiment     Float?   // -1 to 1 scale
+  aiTags        String[] // AI-generated tags/topics
+  languageCode  String?  // Detected language code
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// AI Token usage
+model AITokenUsage {
+  id          String    @id @default(cuid())
+  userId      String
+  amount      Int       // Number of tokens used
+  feature     String    // Which feature used the tokens (e.g., "transcription", "analysis")
+  modelName   String    // Which AI model was used (e.g., "gemini-1.5-pro")
+  createdAt   DateTime  @default(now())
+}
+
+// Enums
+enum PrivacyLevel {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  HAHA
+  WOW
+  SAD
+  ANGRY
+}
+
+enum FollowStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  TEXT
+}
+
+enum AudioProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationType {
+  FOLLOW
+  LIKE
+  COMMENT
+  MESSAGE
+  TAG
+  FRIEND_REQUEST
+  POST_SHARE
+  REEL_LIKE
+  REEL_COMMENT
+  STORY_VIEW
+  STORY_REACTION
+  STORY_MENTION
+  AUDIO_MESSAGE
+  SYSTEM
+}
+
+enum AIPlan {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import JsonLd from './JsonLd';
 
@@ -18,7 +18,7 @@ interface PageSEOProps {
   twitterImage?: string;
   noIndex?: boolean;
   schema?: Record<string, any> | Record<string, any>[];
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 /**
@@ -65,9 +65,8 @@ export function PageSEO({
       {schema && <JsonLd schema={schema} />}
       
       {/* Additional client-side metadata (if needed) */}
-      {noIndex && (
-        <meta name="robots" content="noindex, nofollow" />
-      )}
+      {/* For client-side only SEO, we should use next/head instead */}
+      {/* noIndex is not used here as it should be handled by Metadata API */}
       
       {children}
     </>

@@ -1,5 +1,4 @@
-import React from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, ReactNode } from 'next';
 
 export const metadata: Metadata = {
   title: 'Reels | DapDip',
@@ -9,7 +8,7 @@ export const metadata: Metadata = {
 export default function ReelsLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="w-full h-[100dvh] overflow-hidden bg-black">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -128,7 +128,7 @@ interface StatsCardProps {
   title: string;
   value: string;
   change: number;
-  icon: React.ReactNode;
+  icon: ReactNode;
   description: string;
   href: string;
 }

@@ -1,6 +1,8 @@
+'use client';
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink, splitLink, createTRPCProxyClient } from "@trpc/client";
-import { useState } from "react";
+import React from "react";
 import superjson from "superjson";
 
 import { api } from "./client";
@@ -24,9 +26,9 @@ export function TRPCProvider({
 }: {
   children: React.ReactNode;
 }): JSX.Element {
-  const [queryClient] = useState(() => new QueryClient(queryClientConfig));
+  const [queryClient] = React.useState(() => new QueryClient(queryClientConfig));
   
-  const [trpcClient] = useState(() =>
+  const [trpcClient] = React.useState(() =>
     api.createClient({
       links: [
         // Custom logger in development only

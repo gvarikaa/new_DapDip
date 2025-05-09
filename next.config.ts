@@ -4,6 +4,18 @@ import type { NextConfig } from "next";
  * Next.js configuration optimized for performance and SEO
  */
 const nextConfig: NextConfig = {
+  // Fix for Node.js modules that need polyfills in the browser
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: require.resolve('crypto-browserify'),
+        stream: require.resolve('stream-browserify'),
+        buffer: require.resolve('buffer'),
+      };
+    }
+    return config;
+  },
   // Performance optimizations
   
   // Image optimization
@@ -18,12 +30,14 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24, // 24 hours
   },
   
-  // Optimized asset loading
+  // Disabled experimental features to resolve compatibility issues
+  /*
   experimental: {
-    optimizeCss: false, // Disabled CSS optimization due to critters dependency issue
+    optimizeCss: false,
     optimizePackageImports: ['@mui/icons-material', '@mui/material', 'date-fns', 'lodash'],
-    serverExternalPackages: [], // Move heavy packages to external for faster bundling
+    serverExternalPackages: [],
   },
+  */
   
   // Optimization for Core Web Vitals
   reactStrictMode: true,

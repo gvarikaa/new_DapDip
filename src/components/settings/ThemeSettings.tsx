@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Moon, Sun, Palette, Check, Monitor, PanelTop, Toggle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -294,7 +294,7 @@ export const ThemeSettings = () => {
 interface ThemeModeCardProps {
   mode: ThemeMode;
   name: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   isActive: boolean;
   onClick: () => void;
 }

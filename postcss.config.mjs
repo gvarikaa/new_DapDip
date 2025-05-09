@@ -1,7 +1,7 @@
 const config = {
   plugins: [
     // Core plugins
-    "@tailwindcss/postcss",
+    "tailwindcss",
     "autoprefixer",
     
     // Use PostCSS preset environment for future CSS features
@@ -16,7 +16,7 @@ const config = {
     ...(process.env.NODE_ENV === 'production'
       ? [
           ["cssnano", {
-            preset: 'advanced',
+            preset: 'default',
             // Remove all comments except those marked with /*!
             discardComments: {
               removeAll: true,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode, type ElementType } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -36,13 +36,13 @@ import {
 import { cn } from '@/lib/utils';
 
 interface AdminLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 type NavItem = {
   title: string;
   href: string;
-  icon: React.ElementType;
+  icon: ElementType;
   submenu?: { title: string; href: string }[];
 };
 

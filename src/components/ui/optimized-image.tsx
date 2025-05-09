@@ -9,7 +9,7 @@ interface OptimizedImageProps extends Omit<ImageProps, 'alt'> {
   fallbackSrc?: string;
   aspectRatio?: string;
   caption?: string;
-  loading?: 'eager'  < /dev/null |  'lazy';
+  loading?: 'eager' | 'lazy';
   fit?: 'contain' | 'cover' | 'fill';
   className?: string;
   wrapperClassName?: string;

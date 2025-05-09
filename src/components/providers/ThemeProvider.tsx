@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { api } from '@/lib/api/trpc/client';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { api } from '@/lib/trpc/client';
 import { PRESET_THEMES, Theme, ThemeMode, applyTheme, getSystemThemePreference } from '@/lib/themes';
 
 interface ThemeContextType {
@@ -36,7 +36,7 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(PRESET_THEMES.light);
   const [mode, setMode] = useState<ThemeMode>('system');
   const [animationsEnabled, setAnimationsEnabled] = useState(true);

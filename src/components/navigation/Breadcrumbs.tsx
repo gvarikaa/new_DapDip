@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ interface BreadcrumbsProps {
   homeHref?: string;
   homeLabel?: string;
   className?: string;
-  separator?: React.ReactNode;
+  separator?: ReactNode;
   showHomeIcon?: boolean;
 }
 

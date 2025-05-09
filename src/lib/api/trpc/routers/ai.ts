@@ -40,7 +40,7 @@ const MAX_TOKENS = {
  * @param feature Feature that used the tokens
  * @param modelName AI model used
  */
-async function trackTokenUsage(
+export async function trackTokenUsage(
   prisma: any,
   userId: string,
   amount: number,

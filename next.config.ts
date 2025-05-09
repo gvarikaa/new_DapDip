@@ -5,7 +5,6 @@ import type { NextConfig } from "next";
  */
 const nextConfig: NextConfig = {
   // Performance optimizations
-  swcMinify: true, // Use SWC for minification (faster than Terser)
   
   // Image optimization
   images: {
@@ -21,9 +20,9 @@ const nextConfig: NextConfig = {
   
   // Optimized asset loading
   experimental: {
-    optimizeCss: true, // CSS optimization
+    optimizeCss: false, // Disabled CSS optimization due to critters dependency issue
     optimizePackageImports: ['@mui/icons-material', '@mui/material', 'date-fns', 'lodash'],
-    serverComponentsExternalPackages: [], // Move heavy packages to external for faster bundling
+    serverExternalPackages: [], // Move heavy packages to external for faster bundling
   },
   
   // Optimization for Core Web Vitals

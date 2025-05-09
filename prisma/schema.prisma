@@ -13,55 +13,58 @@ datasource db {
 
 // User model with profile information
 model User {
-  id                String    @id @default(cuid())
-  name              String?
-  email             String?   @unique
-  emailVerified     DateTime?
-  image             String?
-  coverImage        String?
-  bio               String?
-  username          String?   @unique
-  joinedAt          DateTime  @default(now())
-  lastActive        DateTime  @default(now())
-  
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  coverImage    String?
+  bio           String?
+  username      String?   @unique
+  joinedAt      DateTime  @default(now())
+  lastActive    DateTime  @default(now())
+
   // Authentication
-  accounts          Account[]
-  sessions          Session[]
-  
+  accounts Account[]
+  sessions Session[]
+
   // Social features
-  posts             Post[]
-  comments          Comment[]
-  reactions         Reaction[]
-  followers         Follows[]   @relation("following")
-  following         Follows[]   @relation("follower")
-  messages          Message[]   @relation("sender")
-  receivedMessages  Message[]   @relation("receiver")
-  notifications     Notification[] @relation("userNotifications")
-  savedPosts        SavedPost[]
-  interests         UserInterest[]
-  
+  posts            Post[]
+  comments         Comment[]
+  reactions        Reaction[]
+  followers        Follows[]      @relation("following")
+  following        Follows[]      @relation("follower")
+  messages         Message[]      @relation("sender")
+  receivedMessages Message[]      @relation("receiver")
+  notifications    Notification[] @relation("userNotifications")
+  savedPosts       SavedPost[]
+  interests        UserInterest[]
+
   // Reels 
-  reels             Reel[]
-  reelLikes         ReelLike[]
-  reelComments      ReelComment[]
-  savedReels        SavedReel[]
-  reelViews         ReelView[]
+  reels        Reel[]
+  reelLikes    ReelLike[]
+  reelComments ReelComment[]
+  savedReels   SavedReel[]
+  reelViews    ReelView[]
 
   // Stories
-  stories           Story[]
-  storyViews        StoryView[]
-  storyReactions    StoryReaction[]
-  storyHighlights   StoryHighlight[]
-  storyResponses    StoryResponse[]
-  
+  stories         Story[]
+  storyViews      StoryView[]
+  storyReactions  StoryReaction[]
+  storyHighlights StoryHighlight[]
+  storyResponses  StoryResponse[]
+
   // Audio messages
-  audioMessages     AudioMessage[]
-  
+  audioMessages AudioMessage[]
+
   // Activity tracking
-  postViews         PostView[]
-  
+  postViews PostView[]
+
   // Settings and preferences
-  settings          UserSettings?
+  settings UserSettings?
+
+  // Better Me health features
+  healthProfile HealthProfile?
 }
 
 // NextAuth models for authentication
@@ -89,8 +92,8 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -103,35 +106,35 @@ model VerificationToken {
 
 // User settings model for preferences
 model UserSettings {
-  id          String  @id @default(cuid())
-  userId      String  @unique
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Theme preferences
-  theme       String  @default("light") // light, dark, dusk, system
-  primaryColor String? // HEX color code
-  secondaryColor String? // HEX color code
-  fontPreference String? // font family name
+  theme             String  @default("light") // light, dark, dusk, system
+  primaryColor      String? // HEX color code
+  secondaryColor    String? // HEX color code
+  fontPreference    String? // font family name
   animationsEnabled Boolean @default(true)
-  
-  language    String  @default("en")
-  
+
+  language String @default("en")
+
   // Privacy settings
   privacyLevel PrivacyLevel @default(PUBLIC)
-  
+
   // Notification preferences
-  emailNotifications Boolean @default(true)
-  pushNotifications  Boolean @default(true)
+  emailNotifications   Boolean @default(true)
+  pushNotifications    Boolean @default(true)
   messageNotifications Boolean @default(true)
-  
+
   // AI preferences
-  aiEnabled    Boolean @default(true)
-  aiTokensRemaining Int @default(150)
-  aiTokensReset DateTime? // When the free daily tokens reset
-  aiPlan       AIPlan @default(FREE)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  aiEnabled         Boolean   @default(true)
+  aiTokensRemaining Int       @default(150)
+  aiTokensReset     DateTime? // When the free daily tokens reset
+  aiPlan            AIPlan    @default(FREE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Topics/interests
@@ -139,592 +142,815 @@ model Topic {
   id          String  @id @default(cuid())
   name        String  @unique
   description String?
-  
+
   // Relations
-  posts       PostTopic[]
-  interests   UserInterest[]
-  stories     StoryTopic[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  posts     PostTopic[]
+  interests UserInterest[]
+  stories   StoryTopic[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserInterest {
-  userId      String
-  topicId     String
-  
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  topic       Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  
+  userId  String
+  topicId String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@id([userId, topicId])
 }
 
 // Post model
 model Post {
-  id          String  @id @default(cuid())
-  content     String? @db.Text
-  
+  id      String  @id @default(cuid())
+  content String? @db.Text
+
   // Media support for images, videos, etc.
   mediaUrls   String[]
   mediaTitles String[]
   mediaTypes  String[]
-  
+
   // AI Analysis results
-  sentiment   Float?         // -1 to 1 scale
-  aiAnalysis  Json?
-  
+  sentiment  Float? // -1 to 1 scale
+  aiAnalysis Json?
+
   // Meta
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
   // Visibility level
   privacyLevel PrivacyLevel @default(PUBLIC)
-  
+
   // Social features
-  comments    Comment[]
-  reactions   Reaction[]
-  savedBy     SavedPost[]
-  topics      PostTopic[]
-  views       PostView[]
+  comments      Comment[]
+  reactions     Reaction[]
+  savedBy       SavedPost[]
+  topics        PostTopic[]
+  views         PostView[]
   audioMessages AudioMessage[]
-  
+
   // Parent-child relationship for shared/reposted content
-  parentId    String?
-  parent      Post?     @relation("PostToPost", fields: [parentId], references: [id], onDelete: SetNull)
-  children    Post[]    @relation("PostToPost")
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  parentId String?
+  parent   Post?   @relation("PostToPost", fields: [parentId], references: [id], onDelete: SetNull)
+  children Post[]  @relation("PostToPost")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Comment model
 model Comment {
-  id          String  @id @default(cuid())
-  content     String?
-  
+  id      String  @id @default(cuid())
+  content String?
+
   // Parent post
-  postId      String
-  post        Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   // Author
-  authorId    String
-  author      User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
   // Parent comment for replies
-  parentId    String?
-  parent      Comment? @relation("CommentToComment", fields: [parentId], references: [id], onDelete: SetNull)
-  replies     Comment[] @relation("CommentToComment")
-  
+  parentId String?
+  parent   Comment?  @relation("CommentToComment", fields: [parentId], references: [id], onDelete: SetNull)
+  replies  Comment[] @relation("CommentToComment")
+
   // Reactions
-  reactions   Reaction[]
-  
+  reactions Reaction[]
+
   // Audio message (if this is an audio comment)
   audioMessage AudioMessage?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Reaction model (likes, loves, etc.)
 model Reaction {
-  id          String      @id @default(cuid())
-  type        ReactionType
-  
+  id   String       @id @default(cuid())
+  type ReactionType
+
   // User who reacted
-  userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Can be a reaction to a post or comment
-  postId      String?
-  post        Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  commentId   String?
-  comment     Comment?    @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([userId, postId, commentId])
 }
 
 // SavedPost model for bookmarking posts
 model SavedPost {
-  id          String   @id @default(cuid())
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  postId      String
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@unique([userId, postId])
 }
 
 // PostTopic model for tagging posts with topics
 model PostTopic {
-  postId      String
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  topicId     String
-  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  topicId String
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@id([postId, topicId])
 }
 
 // Follows/connections between users
 model Follows {
-  followerId  String
-  follower    User    @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
-  
+  followerId String
+  follower   User   @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+
   followingId String
-  following   User    @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
-  
+  following   User   @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
   // Friend status (mutual follows are friends)
-  status      FollowStatus @default(PENDING)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  status FollowStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@id([followerId, followingId])
 }
 
 // Messages between users
 model Message {
-  id          String  @id @default(cuid())
-  content     String?  @db.Text
-  
+  id      String  @id @default(cuid())
+  content String? @db.Text
+
   // Media support
-  mediaUrl    String?
-  mediaType   String?
-  
+  mediaUrl  String?
+  mediaType String?
+
   // Sender and receiver
-  senderId    String
-  sender      User    @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
-  
-  receiverId  String
-  receiver    User    @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  
+  senderId String
+  sender   User   @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  receiverId String
+  receiver   User   @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
   // Audio message (if this is an audio message)
   audioMessage AudioMessage?
-  
+
   // Read status
-  read        Boolean @default(false)
-  readAt      DateTime?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  read   Boolean   @default(false)
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Notifications system
 model Notification {
-  id          String            @id @default(cuid())
-  
-  userId      String
-  user        User              @relation("userNotifications", fields: [userId], references: [id], onDelete: Cascade)
-  
-  type        NotificationType
-  title       String
-  content     String
-  
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation("userNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  type    NotificationType
+  title   String
+  content String
+
   // Optional link to related content
-  link        String?
-  
-  read        Boolean          @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  link String?
+
+  read Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Post view tracking
 model PostView {
-  id          String    @id @default(cuid())
-  
-  postId      String
-  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime  @default(now())
-  
+  id String @id @default(cuid())
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@unique([postId, userId])
 }
 
 // Reels (TikTok/Instagram style vertical videos)
 model Reel {
-  id            String    @id @default(cuid())
-  videoUrl      String
-  thumbnailUrl  String
-  description   String?   @db.Text
-  
+  id           String  @id @default(cuid())
+  videoUrl     String
+  thumbnailUrl String
+  description  String? @db.Text
+
   // Video metadata
-  duration      Float     // In seconds
-  aspectRatio   Float     @default(0.5625) // 9:16 = 0.5625
-  audio         Json?     // Artist, title, etc.
-  
+  duration    Float // In seconds
+  aspectRatio Float @default(0.5625) // 9:16 = 0.5625
+  audio       Json? // Artist, title, etc.
+
   // Author and privacy
-  authorId      String
-  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  privacyLevel  PrivacyLevel @default(PUBLIC)
-  
+  authorId     String
+  author       User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  privacyLevel PrivacyLevel @default(PUBLIC)
+
   // Tags and topics
-  tags          String[]
-  
+  tags String[]
+
   // Engagement metrics
   likes         ReelLike[]
   comments      ReelComment[]
   savedBy       SavedReel[]
   views         ReelView[]
   audioMessages AudioMessage[]
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Reel likes
 model ReelLike {
-  id          String    @id @default(cuid())
-  
-  reelId      String
-  reel        Reel      @relation(fields: [reelId], references: [id], onDelete: Cascade)
-  
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime  @default(now())
-  
+  id String @id @default(cuid())
+
+  reelId String
+  reel   Reel   @relation(fields: [reelId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@unique([reelId, userId])
 }
 
 // Reel comments
 model ReelComment {
-  id          String    @id @default(cuid())
-  content     String?
-  
-  reelId      String
-  reel        Reel      @relation(fields: [reelId], references: [id], onDelete: Cascade)
-  
-  authorId    String
-  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
+  id      String  @id @default(cuid())
+  content String?
+
+  reelId String
+  reel   Reel   @relation(fields: [reelId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
   // Audio message (if this is an audio comment)
   audioMessage AudioMessage?
-  
+
   // Parent comment for replies
-  parentId    String?
-  parent      ReelComment? @relation("ReelCommentToReelComment", fields: [parentId], references: [id], onDelete: SetNull)
-  replies     ReelComment[] @relation("ReelCommentToReelComment")
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  parentId String?
+  parent   ReelComment?  @relation("ReelCommentToReelComment", fields: [parentId], references: [id], onDelete: SetNull)
+  replies  ReelComment[] @relation("ReelCommentToReelComment")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Saved reels
 model SavedReel {
-  id          String    @id @default(cuid())
-  
-  reelId      String
-  reel        Reel      @relation(fields: [reelId], references: [id], onDelete: Cascade)
-  
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime  @default(now())
-  
+  id String @id @default(cuid())
+
+  reelId String
+  reel   Reel   @relation(fields: [reelId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@unique([reelId, userId])
 }
 
 // Reel view tracking
 model ReelView {
-  id          String    @id @default(cuid())
-  
-  reelId      String
-  reel        Reel      @relation(fields: [reelId], references: [id], onDelete: Cascade)
-  
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id String @id @default(cuid())
+
+  reelId String
+  reel   Reel   @relation(fields: [reelId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // View metrics
-  watchDuration Float    // In seconds
-  watchPercentage Float  // 0-100%
-  completedView Boolean  @default(false) // True if watched to the end
-  
-  createdAt   DateTime  @default(now())
-  
+  watchDuration   Float // In seconds
+  watchPercentage Float // 0-100%
+  completedView   Boolean @default(false) // True if watched to the end
+
+  createdAt DateTime @default(now())
+
   @@unique([reelId, userId])
 }
 
 // Stories System - Instagram/Facebook-like 24-hour content
 model Story {
-  id              String      @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Media content
-  mediaUrl        String      // URL to the image, video, or text background
-  thumbnailUrl    String?     // Thumbnail for preview
-  mediaType       MediaType   // IMAGE, VIDEO, or TEXT
-  duration        Float?      // For videos or display duration for text/images
-  
+  mediaUrl     String // URL to the image, video, or text background
+  thumbnailUrl String? // Thumbnail for preview
+  mediaType    MediaType // IMAGE, VIDEO, or TEXT
+  duration     Float? // For videos or display duration for text/images
+
   // Story creation details
-  authorId        String
-  author          User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  caption         String?     @db.Text
-  location        String?
-  
+  authorId String
+  author   User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  caption  String? @db.Text
+  location String?
+
   // Creative tools elements
-  backgroundColor String?     // For text stories or color backgrounds
-  textOverlays    Json?       // Array of text elements with positioning and styling
-  drawElements    Json?       // Array of drawing elements with paths and colors
-  stickers        Json?       // Array of stickers with positioning
-  filter          String?     // Applied filter name/id
-  
+  backgroundColor String? // For text stories or color backgrounds
+  textOverlays    Json? // Array of text elements with positioning and styling
+  drawElements    Json? // Array of drawing elements with paths and colors
+  stickers        Json? // Array of stickers with positioning
+  filter          String? // Applied filter name/id
+
   // Music
-  musicTrackUrl   String?
-  musicArtist     String?
-  musicTitle      String?
-  
+  musicTrackUrl String?
+  musicArtist   String?
+  musicTitle    String?
+
   // Interactive elements
-  allowResponses  Boolean     @default(true)
-  
+  allowResponses Boolean @default(true)
+
   // Visibility and status
-  privacyLevel    PrivacyLevel @default(PUBLIC)
-  isArchived      Boolean      @default(false)
-  expiresAt       DateTime     // 24 hours from creation
-  
+  privacyLevel PrivacyLevel @default(PUBLIC)
+  isArchived   Boolean      @default(false)
+  expiresAt    DateTime // 24 hours from creation
+
   // Engagement
-  views           StoryView[]
-  reactions       StoryReaction[]
-  responses       StoryResponse[]
-  topics          StoryTopic[]
-  highlights      StoryHighlightItem[]
-  audioMessages   AudioMessage[]
-  
+  views         StoryView[]
+  reactions     StoryReaction[]
+  responses     StoryResponse[]
+  topics        StoryTopic[]
+  highlights    StoryHighlightItem[]
+  audioMessages AudioMessage[]
+
   // Links
-  links           StoryLink[]
-  
+  links StoryLink[]
+
   // Interactive elements
-  polls           StoryPoll[]
-  questions       StoryQuestion[]
-  sliders         StorySlider[]
-  
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  polls     StoryPoll[]
+  questions StoryQuestion[]
+  sliders   StorySlider[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StoryView {
-  id          String    @id @default(cuid())
-  
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id String @id @default(cuid())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // View duration for analytics
   viewDuration Float?
-  
-  createdAt   DateTime  @default(now())
-  
+
+  createdAt DateTime @default(now())
+
   @@unique([storyId, userId])
 }
 
 model StoryReaction {
-  id          String    @id @default(cuid())
-  
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  emoji       String    // Unicode emoji or reference to custom emoji
-  
-  createdAt   DateTime  @default(now())
-  
+  id String @id @default(cuid())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emoji String // Unicode emoji or reference to custom emoji
+
+  createdAt DateTime @default(now())
+
   @@unique([storyId, userId])
 }
 
 model StoryResponse {
-  id          String    @id @default(cuid())
-  
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  content     String?   @db.Text
-  
+  id String @id @default(cuid())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content String? @db.Text
+
   // Audio message (if this is an audio response)
   audioMessage AudioMessage?
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StoryTopic {
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  topicId     String
-  topic       Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime  @default(now())
-  
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  topicId String
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@id([storyId, topicId])
 }
 
 model StoryHighlight {
-  id          String    @id @default(cuid())
-  
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  name        String
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String
   coverImageUrl String?
-  
-  items       StoryHighlightItem[]
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+
+  items StoryHighlightItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StoryHighlightItem {
-  id          String    @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   highlightId String
   highlight   StoryHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
-  
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  order       Int       @default(0) // For ordering in highlight
-  
-  createdAt   DateTime  @default(now())
-  
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  order Int @default(0) // For ordering in highlight
+
+  createdAt DateTime @default(now())
+
   @@unique([highlightId, storyId])
 }
 
 // Interactive story elements
 model StoryPoll {
-  id          String    @id @default(cuid())
-  
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  question    String
-  options     Json      // Array of {id, text}
-  votes       Json?     // Map of optionId => [userIds]
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id String @id @default(cuid())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  question String
+  options  Json // Array of {id, text}
+  votes    Json? // Map of optionId => [userIds]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StoryQuestion {
-  id          String    @id @default(cuid())
-  
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  question    String
-  answers     Json?     // Array of {userId, answer}
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id String @id @default(cuid())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  question String
+  answers  Json? // Array of {userId, answer}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StorySlider {
-  id          String    @id @default(cuid())
-  
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  question    String
-  emoji       String?   // Optional emoji for the slider
-  responses   Json?     // Array of {userId, value}
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id String @id @default(cuid())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  question  String
+  emoji     String? // Optional emoji for the slider
+  responses Json? // Array of {userId, value}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StoryLink {
-  id          String    @id @default(cuid())
-  
-  storyId     String
-  story       Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
-  url         String
-  label       String?
-  position    Json?     // {x, y} coordinates for positioning
-  
-  createdAt   DateTime  @default(now())
+  id String @id @default(cuid())
+
+  storyId String
+  story   Story  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  url      String
+  label    String?
+  position Json? // {x, y} coordinates for positioning
+
+  createdAt DateTime @default(now())
 }
 
 // Audio messages system
 model AudioMessage {
-  id            String    @id @default(cuid())
-  url           String    // URL to the audio file
-  duration      Float     // Duration in seconds
-  waveform      Json      // Audio visualization data
-  transcription String?   @db.Text // AI-generated transcription
-  
+  id            String  @id @default(cuid())
+  url           String // URL to the audio file
+  duration      Float // Duration in seconds
+  waveform      Json // Audio visualization data
+  transcription String? @db.Text // AI-generated transcription
+
   // Processing status
   processingStatus AudioProcessingStatus @default(PENDING)
-  
+
   // Relations - can be attached to different entities
-  userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Comment relation (optional)
-  commentId     String?   @unique
-  comment       Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  
+  commentId String?  @unique
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
   // Reel comment relation (optional)
-  reelCommentId String?   @unique
+  reelCommentId String?      @unique
   reelComment   ReelComment? @relation(fields: [reelCommentId], references: [id], onDelete: Cascade)
-  
+
   // Message relation (optional)
-  messageId     String?   @unique
-  message       Message?  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  
+  messageId String?  @unique
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
   // Story response relation (optional)
-  storyResponseId String? @unique
+  storyResponseId String?        @unique
   storyResponse   StoryResponse? @relation(fields: [storyResponseId], references: [id], onDelete: Cascade)
-  
+
   // Direct post audio comment (optional)
-  postId        String?
-  post          Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   // Direct reel audio comment (optional)
-  reelId        String?
-  reel          Reel?    @relation(fields: [reelId], references: [id], onDelete: Cascade)
-  
+  reelId String?
+  reel   Reel?   @relation(fields: [reelId], references: [id], onDelete: Cascade)
+
   // Direct story audio comment (optional)
-  storyId       String?
-  story         Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  
+  storyId String?
+  story   Story?  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
   // Analysis fields
-  sentiment     Float?   // -1 to 1 scale
-  aiTags        String[] // AI-generated tags/topics
-  languageCode  String?  // Detected language code
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  sentiment    Float? // -1 to 1 scale
+  aiTags       String[] // AI-generated tags/topics
+  languageCode String? // Detected language code
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // AI Token usage
 model AITokenUsage {
-  id          String    @id @default(cuid())
-  userId      String
-  amount      Int       // Number of tokens used
-  feature     String    // Which feature used the tokens (e.g., "transcription", "analysis")
-  modelName   String    // Which AI model was used (e.g., "gemini-1.5-pro")
-  createdAt   DateTime  @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int // Number of tokens used
+  feature   String // Which feature used the tokens (e.g., "transcription", "analysis")
+  modelName String // Which AI model was used (e.g., "gemini-1.5-pro")
+  createdAt DateTime @default(now())
+}
+
+// Better Me Health Profile
+model HealthProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Physical measurements
+  height        Float? // In cm
+  weight        Float? // In kg
+  birthdate     DateTime?
+  gender        String?
+  activityLevel ActivityLevel?
+
+  // Goals
+  primaryGoal    String? // Weight loss, muscle gain, etc.
+  secondaryGoals String[] // Additional goals
+  targetWeight   Float? // Target weight in kg
+  targetDate     DateTime? // Goal target date
+
+  // Dietary information
+  dietaryPreferences String[] // Vegetarian, vegan, etc.
+  foodAllergies      String[] // Foods to avoid
+  foodPreferences    Json? // Likes and dislikes
+
+  // Health information
+  healthConditions String[] // Medical conditions
+  medications      String[] // Current medications
+  sleepGoalHours   Float? // Target sleep hours
+  stressLevel      Int? // 1-10 scale
+  energyLevel      Int? // 1-10 scale
+
+  // Privacy and sharing
+  privacyLevel  PrivacyLevel @default(PRIVATE)
+  shareProgress Boolean      @default(false)
+  shareMeals    Boolean      @default(false)
+  shareWorkouts Boolean      @default(false)
+
+  // Preferences
+  measurementSystem    String  @default("metric") // metric or imperial
+  notificationsEnabled Boolean @default(true)
+
+  // Related data
+  healthLogs   HealthLog[]
+  waterLogs    WaterLog[]
+  sleepLogs    SleepLog[]
+  mealPlans    MealPlan[]
+  workoutPlans WorkoutPlan[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Health tracking logs
+model HealthLog {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  date               DateTime
+  weight             Float? // In kg
+  bodyFatPercentage  Float? // In %
+  waistCircumference Float? // In cm
+  hipCircumference   Float? // In cm
+  chestCircumference Float? // In cm
+  energyLevel        Int? // 1-10 scale
+  moodRating         Int? // 1-10 scale
+  stressLevel        Int? // 1-10 scale
+
+  notes    String?
+  photoUrl String? // Optional progress photo
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Water intake tracking
+model WaterLog {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  date   DateTime
+  amount Int // Amount in ml
+
+  createdAt DateTime @default(now())
+}
+
+// Sleep tracking
+model SleepLog {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  date      DateTime // The night of sleep (e.g., 2023-06-15 for the night of June 15th)
+  startTime DateTime // When sleep started
+  endTime   DateTime // When sleep ended
+  duration  Float // Duration in hours
+  quality   Int? // 1-10 scale
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Meal planning
+model MealPlan {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name      String
+  startDate DateTime // When the plan starts
+  endDate   DateTime // When the plan ends
+
+  // Nutrition summary
+  totalCalories Int?
+  protein       Int? // in grams
+  carbs         Int? // in grams
+  fat           Int? // in grams
+
+  // Meal details
+  meals Meal[]
+
+  // Plan metadata
+  generatedByAI Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Meal {
+  id         String   @id @default(cuid())
+  mealPlanId String
+  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+
+  day    Int // Day number in the plan
+  type   String // Breakfast, Lunch, Dinner, Snack
+  name   String // Name of the meal
+  recipe String? @db.Text // Recipe/preparation instructions
+
+  // Nutrition info
+  calories Int?
+  protein  Int? // in grams
+  carbs    Int? // in grams
+  fat      Int? // in grams
+
+  // Ingredients as JSON or string array
+  ingredients Json? // List of ingredients
+
+  completed     Boolean   @default(false)
+  completedDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Workout planning
+model WorkoutPlan {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name      String
+  startDate DateTime // When the plan starts
+  endDate   DateTime // When the plan ends
+
+  // Workout configuration
+  difficulty  String // Beginner, Intermediate, Advanced
+  focusArea   String[] // Upper body, Lower body, Cardio, etc.
+  daysPerWeek Int
+
+  // Workout sessions
+  workouts Workout[]
+
+  // Plan metadata
+  generatedByAI Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Workout {
+  id            String      @id @default(cuid())
+  workoutPlanId String
+  workoutPlan   WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+
+  day          Int // Day number in the plan
+  name         String // Name of the workout (e.g., "Upper Body Strength")
+  instructions String? @db.Text // Overall instructions for the workout
+
+  // Workout metrics
+  durationMinutes Int?
+  caloriesBurned  Int?
+
+  // Exercises in the workout
+  exercises Exercise[]
+
+  // Completion tracking
+  completed     Boolean   @default(false)
+  completedDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Exercise {
+  id        String  @id @default(cuid())
+  workoutId String
+  workout   Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  name        String // Name of the exercise
+  sets        Int? // Number of sets
+  reps        String? // Number of reps (can be a range like "8-12")
+  duration    String? // Duration (for timed exercises)
+  restSeconds Int? // Rest between sets in seconds
+
+  instructions String? @db.Text
+  videoUrl     String? // Link to demo video
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Enums
@@ -785,4 +1011,12 @@ enum AIPlan {
   BASIC
   PRO
   ENTERPRISE
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
+  EXTREMELY_ACTIVE
 }

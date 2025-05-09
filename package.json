@@ -6,7 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-sitemap": "node src/scripts/generate-sitemap.js",
+    "lighthouse": "lighthouse http://localhost:3000 --view --preset=desktop",
+    "analyze": "ANALYZE=true next build",
+    "check-404": "npx broken-link-checker http://localhost:3000 -ro",
+    "w3c-validate": "npx html-validator-cli --file=.next/**/*.html --verbose --isLocal"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -40,16 +45,24 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^15.3.2",
     "@supabase/supabase-js": "^2.49.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.16",
+    "cssnano": "^6.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
+    "lighthouse": "^11.7.0",
+    "postcss": "^8.4.40",
+    "postcss-preset-env": "^9.8.2",
     "prisma": "^6.7.0",
     "tailwindcss": "^4",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5",
+    "web-vitals": "^3.7.0"
   }
 }

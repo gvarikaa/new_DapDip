@@ -9,6 +9,7 @@ import { aiRouter } from "./routers/ai";
 import { reelRouter } from "./routers/reels";
 import { storiesRouter } from "./routers/stories";
 import { audioRouter } from "./routers/audio";
+import { betterMeRouter } from "./routers/better-me";
 
 export const appRouter = createTRPCRouter({
   user: userRouter,
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   reel: reelRouter,
   story: storiesRouter,
   audio: audioRouter,
+  betterMe: betterMeRouter,
 });
 
 export type AppRouter = typeof appRouter;

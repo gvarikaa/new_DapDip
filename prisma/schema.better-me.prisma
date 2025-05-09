@@ -1,0 +1,295 @@
+// Better Me Health and Wellness Models
+// These models will be merged into the main schema.prisma file
+
+// User health profile
+model HealthProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique // One-to-one relation with User
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Biometric data
+  height            Float?    // Height in cm
+  weight            Float?    // Weight in kg
+  birthdate         DateTime? // For age calculation
+  gender            String?   // For personalized recommendations
+  activityLevel     String?   // Sedentary, Light, Moderate, Active, Very Active
+  
+  // Health goals
+  primaryGoal       String?   // Weight loss, Muscle gain, Better sleep, More energy, etc.
+  secondaryGoals    String[]  // Array of additional goals
+  targetWeight      Float?    // Target weight in kg (if weight-related goal)
+  targetDate        DateTime? // Target date to achieve goal
+  
+  // Dietary preferences and restrictions
+  dietaryPreferences String[]  // Vegan, Vegetarian, Keto, Paleo, etc.
+  foodAllergies      String[]  // List of food allergies
+  foodPreferences    Json?     // Preferred and disliked foods as JSON
+  
+  // Health conditions
+  healthConditions   String[]  // List of health conditions
+  medications        String[]  // List of medications
+  
+  // Privacy settings
+  privacyLevel       PrivacyLevel @default(PRIVATE)
+  shareProgress      Boolean      @default(false)
+  shareMeals         Boolean      @default(false)
+  shareWorkouts      Boolean      @default(false)
+  
+  // Wellness data
+  sleepGoalHours     Float?    // Target sleep hours
+  stressLevel        Int?      // 1-10 scale
+  energyLevel        Int?      // 1-10 scale
+  
+  // Additional settings
+  measurementSystem  String    @default("metric") // metric or imperial
+  notificationsEnabled Boolean @default(true)
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  healthLogs        HealthLog[]
+  mealPlans         MealPlan[]
+  workoutPlans      WorkoutPlan[]
+  waterLogs         WaterLog[]
+  sleepLogs         SleepLog[]
+  recipes           SavedRecipe[]
+  challenges        ChallengeParticipant[]
+}
+
+// Health log for tracking progress
+model HealthLog {
+  id                String    @id @default(cuid())
+  profileId         String    // Foreign key to HealthProfile
+  profile           HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // Measurements
+  date              DateTime  @default(now())
+  weight            Float?    // Weight in kg
+  bodyFatPercentage Float?    // Body fat percentage
+  waistCircumference Float?   // Waist in cm
+  hipCircumference  Float?    // Hip in cm
+  chestCircumference Float?   // Chest in cm
+  energyLevel       Int?      // 1-10 scale
+  moodRating        Int?      // 1-10 scale
+  stressLevel       Int?      // 1-10 scale
+  notes             String?   @db.Text
+  
+  // Photo reference (optional)
+  photoUrl          String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([profileId, date])
+}
+
+// Meal planning
+model MealPlan {
+  id                String    @id @default(cuid())
+  profileId         String    // Foreign key to HealthProfile
+  profile           HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  name              String
+  startDate         DateTime
+  endDate           DateTime
+  totalCalories     Int?      // Daily calorie target
+  protein           Int?      // Protein target in grams
+  carbs             Int?      // Carbs target in grams
+  fat               Int?      // Fat target in grams
+  generatedByAI     Boolean   @default(false)
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  meals             Meal[]
+
+  @@index([profileId, startDate, endDate])
+}
+
+model Meal {
+  id                String    @id @default(cuid())
+  mealPlanId        String    // Foreign key to MealPlan
+  mealPlan          MealPlan  @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  
+  day               Int       // Day number in the plan
+  type              String    // Breakfast, Lunch, Dinner, Snack
+  name              String
+  recipe            String?   @db.Text
+  calories          Int?
+  protein           Int?      // in grams
+  carbs             Int?      // in grams
+  fat               Int?      // in grams
+  ingredients       String[]
+  imageUrl          String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([mealPlanId, day, type])
+}
+
+// Workout planning
+model WorkoutPlan {
+  id                String    @id @default(cuid())
+  profileId         String    // Foreign key to HealthProfile
+  profile           HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  name              String
+  startDate         DateTime
+  endDate           DateTime
+  difficulty        String    // Beginner, Intermediate, Advanced
+  focusArea         String[]  // Areas of focus (Strength, Cardio, Flexibility, etc.)
+  daysPerWeek       Int
+  generatedByAI     Boolean   @default(false)
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  workouts          Workout[]
+
+  @@index([profileId, startDate, endDate])
+}
+
+model Workout {
+  id                String    @id @default(cuid())
+  workoutPlanId     String    // Foreign key to WorkoutPlan
+  workoutPlan       WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  
+  day               Int       // Day number in the plan
+  name              String
+  instructions      String?   @db.Text
+  durationMinutes   Int
+  caloriesBurned    Int?
+  completed         Boolean   @default(false)
+  completedDate     DateTime?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  exercises         WorkoutExercise[]
+
+  @@index([workoutPlanId, day])
+}
+
+model WorkoutExercise {
+  id                String    @id @default(cuid())
+  workoutId         String    // Foreign key to Workout
+  workout           Workout   @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  
+  name              String
+  sets              Int?
+  reps              Int?
+  duration          Int?      // Duration in seconds (for timed exercises)
+  restSeconds       Int?      // Rest period in seconds
+  instructions      String?   @db.Text
+  videoUrl          String?
+  imageUrl          String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([workoutId])
+}
+
+// Water tracking
+model WaterLog {
+  id                String    @id @default(cuid())
+  profileId         String    // Foreign key to HealthProfile
+  profile           HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  date              DateTime  @default(now())
+  amount            Int       // Amount in ml
+  
+  createdAt         DateTime  @default(now())
+
+  @@index([profileId, date])
+}
+
+// Sleep tracking
+model SleepLog {
+  id                String    @id @default(cuid())
+  profileId         String    // Foreign key to HealthProfile
+  profile           HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  date              DateTime  // Date of sleep
+  startTime         DateTime
+  endTime           DateTime
+  duration          Float     // Hours of sleep
+  quality           Int?      // 1-10 scale
+  notes             String?   @db.Text
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([profileId, date])
+}
+
+// Recipe management
+model SavedRecipe {
+  id                String    @id @default(cuid())
+  profileId         String    // Foreign key to HealthProfile
+  profile           HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  name              String
+  ingredients       String[]
+  instructions      String    @db.Text
+  prepTimeMinutes   Int?
+  cookTimeMinutes   Int?
+  servings          Int?
+  calories          Int?
+  protein           Int?      // in grams
+  carbs             Int?      // in grams
+  fat               Int?      // in grams
+  imageUrl          String?
+  tags              String[]  // For categorization
+  isPublic          Boolean   @default(false)
+  generatedByAI     Boolean   @default(false)
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([profileId])
+  @@index([isPublic])
+}
+
+// Community challenges
+model Challenge {
+  id                String    @id @default(cuid())
+  name              String
+  description       String    @db.Text
+  startDate         DateTime
+  endDate           DateTime
+  goal              String
+  category          String    // Fitness, Nutrition, Wellness, etc.
+  createdById       String    // User who created the challenge
+  imageUrl          String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  participants      ChallengeParticipant[]
+
+  @@index([startDate, endDate])
+}
+
+model ChallengeParticipant {
+  id                String    @id @default(cuid())
+  challengeId       String
+  challenge         Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  profileId         String
+  profile           HealthProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  joinedAt          DateTime  @default(now())
+  progress          Int       @default(0) // Percentage progress
+  status            String    @default("ACTIVE") // ACTIVE, COMPLETED, DROPPED
+  
+  @@unique([challengeId, profileId])
+  @@index([challengeId])
+  @@index([profileId])
+}

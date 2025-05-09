@@ -12,7 +12,8 @@ import {
   LogOut,
   Bookmark,
   Menu,
-  X
+  X,
+  Heart
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -48,6 +49,11 @@ export function Sidebar(): JSX.Element {
       label: "Notifications",
       href: "/notifications",
       icon: Bell,
+    },
+    {
+      label: "Better Me",
+      href: "/better-me",
+      icon: Heart,
     },
     {
       label: "Saved",

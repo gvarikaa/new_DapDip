@@ -1,82 +1,79 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import Image, { ImageProps } from "next/image";
-import { cn } from "@/lib/utils";
-import { Skeleton } from "./skeleton";
+import React, { useState } from 'react';
+import Image, { ImageProps } from 'next/image';
+import { cn } from '@/lib/utils';
 
-interface OptimizedImageProps extends Omit<ImageProps, "onError" | "onLoad"> {
-  fallback?: React.ReactNode;
-  aspectRatio?: "square" | "video" | "portrait" | "auto";
-  containerClassName?: string;
+interface OptimizedImageProps extends Omit<ImageProps, 'alt'> {
+  alt: string;
+  fallbackSrc?: string;
+  aspectRatio?: string;
+  caption?: string;
+  loading?: 'eager'  < /dev/null |  'lazy';
+  fit?: 'contain' | 'cover' | 'fill';
+  className?: string;
+  wrapperClassName?: string;
 }
 
 /**
- * A wrapper around Next.js Image component with optimizations:
- * - Lazy loading by default
- * - Loading state with skeleton
- * - Error handling with fallback content
- * - Common aspect ratios
+ * SEO-optimized image component with fallback, lazy loading, and accessibility features
+ * 
+ * @example
+ * <OptimizedImage
+ *   src="/images/profile.jpg"
+ *   alt="User profile picture"
+ *   width={300}
+ *   height={300}
+ *   caption="John Doe's profile"
+ * />
  */
-const OptimizedImage = React.forwardRef<HTMLImageElement, OptimizedImageProps>(
-  (
-    {
-      src,
-      alt,
-      className,
-      priority,
-      fallback,
-      aspectRatio = "auto",
-      containerClassName,
-      ...props
-    },
-    ref
-  ) => {
-    const [isLoading, setIsLoading] = useState(!priority);
-    const [error, setError] = useState(false);
-
-    // Handle different aspect ratios
-    const aspectRatioClasses = {
-      square: "aspect-square",
-      video: "aspect-video",
-      portrait: "aspect-[3/4]", 
-      auto: "",
-    };
-
-    if (error && fallback) {
-      return <>{fallback}</>;
-    }
-
-    return (
+export function OptimizedImage({
+  src,
+  alt,
+  fallbackSrc = '/images/placeholder.jpg',
+  aspectRatio = '1/1',
+  caption,
+  loading = 'lazy',
+  fit = 'cover',
+  className,
+  wrapperClassName,
+  ...props
+}: OptimizedImageProps): JSX.Element {
+  const [isError, setIsError] = useState(false);
+  
+  // Handle image load error
+  const handleError = () => {
+    setIsError(true);
+  };
+  
+  return (
+    <figure className={cn('relative overflow-hidden', wrapperClassName)}>
       <div 
-        className={cn(
-          "relative overflow-hidden", 
-          aspectRatioClasses[aspectRatio],
-          containerClassName
-        )}
+        className={cn('relative overflow-hidden', className)}
+        style={{ aspectRatio }}
       >
-        {isLoading && (
-          <Skeleton className="absolute inset-0 z-10" />
-        )}
         <Image
-          ref={ref}
-          src={src}
-          alt={alt || "Image"}
+          src={isError ? fallbackSrc : src}
+          alt={alt} // Alt text is required for accessibility
+          loading={loading} // Default to lazy loading for better performance
+          onError={handleError}
           className={cn(
-            "transition-opacity duration-300",
-            isLoading ? "opacity-0" : "opacity-100",
-            className
+            'transition-opacity duration-300',
+            fit === 'contain' && 'object-contain',
+            fit === 'cover' && 'object-cover',
+            fit === 'fill' && 'object-fill'
           )}
-          loading={priority ? "eager" : "lazy"}
-          onLoad={() => setIsLoading(false)}
-          onError={() => setError(true)}
           {...props}
         />
       </div>
-    );
-  }
-);
+      
+      {caption && (
+        <figcaption className="mt-2 text-sm text-muted-foreground text-center">
+          {caption}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
 
-OptimizedImage.displayName = "OptimizedImage";
-
-export { OptimizedImage };
+export default OptimizedImage;
